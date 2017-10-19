@@ -1,17 +1,4 @@
-var express = require('express');
-var app = express();
-const srcPing = 'google.com';
-var ping = require('ping');
-var options = {
-    redirect: true,
-    extensions: ['htm', 'html'],
-    setHeaders: function (res, path, stat) {
-        res.set('access-control-allow-origin', '*');
-        res.set('access-control-allow-methods', 'POST, GET, OPTIONS');
-    }
-};
 
-app.use(express.static('public', options));
 app.get('/', function (req, res) {
     res.send('Hello, World');
 });

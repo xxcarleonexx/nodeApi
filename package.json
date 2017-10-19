@@ -1,10 +1,22 @@
 {
   "name": "api",
   "version": "0.0.1",
+  "description": "Test project",
+  "main": "server.js",
+  "author": "Sergey Rusanov",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
   "dependencies": {
     "express": "^4.16.2",
     "bearer-token": "^2.0.1",
     "http": "^0.0.0",
-    "ping" : "^0.2.2"
+    "ping" : "^0.2.2",
+    "body-parser": "^1.18.2",
+    "mongodb": "^2.2.33"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.1"
   }
 }
