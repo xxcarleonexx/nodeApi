@@ -9,12 +9,17 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.16.2",
-    "bearer-token": "^2.0.1",
+    "koa": "^2.3.0",
+    "koa-router": "^7.2.1",
+    "koa-bodyparser": "^4.2.0",
+    "koa-passport": "^4.0.1",
+    "passport-jwt": "^3.0.0",
+    "passport-local": "^1.0.0",
+    "mongoose": "^4.12.3",
+    "jsonwebtoken": "^8.1.0",
+    "crypto": "^1.0.1",
     "http": "^0.0.0",
-    "ping" : "^0.2.2",
-    "body-parser": "^1.18.2",
-    "mongodb": "^2.2.33"
+    "ping": "^0.2.2"
   },
   "devDependencies": {
     "nodemon": "^1.12.1"

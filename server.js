@@ -1,6 +1,5 @@
 const Koa = require('koa');
 const Router = require('koa-router');
-const mongoClient = require('mongodb').MongoClient;
 const bodyParser = require('koa-bodyparser');
 const app = new Koa();
 const options = {
@@ -14,11 +13,11 @@ const options = {
 const router = new Router();
 const passport = require('koa-passport');
 const LocalStrategy = require('passport-local');
-const JwtStrategy = require('passport-jwt');
-const ExtractJwt = require('passport-jwt');
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const jwtSecret = "somehash";
+const jwtsecret = "somehash";
 const jwt = require('jsonwebtoken');
 
 mongoose.Promise = Promise;
@@ -31,7 +30,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: 'Укажите e-mail',
-        unique: 'Такой e-mail уже сущетсвует'
+        unique: 'Такой e-mail уже существует'
     },
     passwordHash: String,
     salt: String,
@@ -52,6 +51,7 @@ userSchema.virtual('password')
     .get(function () {
         return this._plainPassword;
     });
+
 userSchema.methods.checkPassword = function(password) {
     if(!password) {
         return false;
@@ -85,7 +85,7 @@ passport.use(new LocalStrategy({
 );
 
 const jwtOptions = {
-    jwtFromRequest: ExtractJwt.fromAuthHeader(),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: jwtsecret
 };
 
@@ -103,11 +103,71 @@ passport.use(new JwtStrategy(jwtOptions, function (payload, done) {
     })
 );
 
+passport.use(new LocalStrategy({
+        usernameField: 'email',
+        passwordField: 'password',
+        session: false
+    },
+    function (email, password, done) {
+        User.findOne({email}, (err, user) => {
+            if (err) {
+                return done(err);
+            }
+
+            if (!user || !user.checkPassword(password)) {
+                return done(null, false, {message: 'Нет такого пользователя или пароль неверен.'});
+            }
+            return done(null, user);
+        });
+    }
+    )
+);
+
+
+router.post('/user', async(ctx, next) => {
+    try {
+        ctx.body = await User.create(ctx.request.body);
+    }
+    catch (err) {
+        ctx.status = 400;
+        ctx.body = err;
+    }
+});
+
+router.post('/login', async(ctx, next) => {
+    await passport.authenticate('local', function (err, user) {
+        if (user == false) {
+            ctx.body = "Login failed";
+        } else {
+            const payload = {
+                id: user.id,
+                displayName: user.displayName,
+                email: user.email
+            };
+            const token = jwt.sign(payload, jwtsecret);
+
+            ctx.body = {user: user.displayName, token: 'JWT ' + token};
+        }
+    })(ctx, next);
+});
+
+router.get('/custom', async(ctx, next) => {
+
+    await passport.authenticate('jwt', function (err, user) {
+        if (user) {
+            ctx.body = "hello " + user.displayName;
+        } else {
+            ctx.body = "No such user";
+            console.log("err", err)
+        }
+    } )(ctx, next)
+});
+
 
 app.use(passport.initialize());
-app.use(router.routes());
-// app.use(Koa.static('public', options));
+// app.use(router.routes());
 // require('./routes')(app, {});
 app.listen(8000, () => {
     console.log('Start server on port 8000');
 });
+
