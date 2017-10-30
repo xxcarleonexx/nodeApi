@@ -23,18 +23,24 @@ const jwt = require('jsonwebtoken');
 mongoose.Promise = Promise;
 mongoose.set('debug', true);
 
-mongoose.connect('mongodb://dbuser:user123456@ds227045.mlab.com:27045/user_tokens');
+mongoose.connect(
+    'mongodb://dbuser:user123456@ds227045.mlab.com:27045/user_tokens',
+    {useMongoClient: true}
+);
 
 const userSchema = new mongoose.Schema({
-    displayName: String,
-    email: {
-        type: String,
-        required: 'Укажите e-mail',
-        unique: 'Такой e-mail уже существует'
+        displayName: String,
+        email: {
+            type: String,
+            required: 'Укажите e-mail',
+            unique: 'Такой e-mail уже существует'
+        },
+        passwordHash: String,
+        salt: String,
     },
-    passwordHash: String,
-    salt: String,
-}, {timestamps: true});
+    {
+        timestamps: true
+    });
 
 
 userSchema.virtual('password')
@@ -52,8 +58,8 @@ userSchema.virtual('password')
         return this._plainPassword;
     });
 
-userSchema.methods.checkPassword = function(password) {
-    if(!password) {
+userSchema.methods.checkPassword = function (password) {
+    if (!password) {
         return false;
     }
     if (!this.passwordHash) {
@@ -124,7 +130,7 @@ passport.use(new LocalStrategy({
 );
 
 
-router.post('/user', async(ctx, next) => {
+router.post('/user', async (ctx, next) => {
     try {
         ctx.body = await User.create(ctx.request.body);
     }
@@ -134,7 +140,7 @@ router.post('/user', async(ctx, next) => {
     }
 });
 
-router.post('/login', async(ctx, next) => {
+router.post('/login', async (ctx, next) => {
     await passport.authenticate('local', function (err, user) {
         if (user == false) {
             ctx.body = "Login failed";
@@ -151,7 +157,7 @@ router.post('/login', async(ctx, next) => {
     })(ctx, next);
 });
 
-router.get('/custom', async(ctx, next) => {
+router.get('/custom', async (ctx, next) => {
 
     await passport.authenticate('jwt', function (err, user) {
         if (user) {
@@ -160,7 +166,7 @@ router.get('/custom', async(ctx, next) => {
             ctx.body = "No such user";
             console.log("err", err)
         }
-    } )(ctx, next)
+    })(ctx, next)
 });
 
 
